@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
@@ -9,6 +8,7 @@ const NoteDetailPage = () => {
   const [note, setNote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const navigate = useNavigate();
 
@@ -30,9 +30,9 @@ const NoteDetailPage = () => {
     fetchNote();
   }, [id]);
 
+  const [deleting, setDeleting] = useState(false);
   const handleDelete = async () => {
-    if (!window.confirm("Are you sure you want to delete this note?")) return;
-
+    setDeleting(true);
     try {
       await api.delete(`/notes/${id}`);
       toast.success("Note deleted");
@@ -40,6 +40,9 @@ const NoteDetailPage = () => {
     } catch (error) {
       console.log("Error deleting the note:", error);
       toast.error("Failed to delete note");
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -66,7 +69,7 @@ const NoteDetailPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-base-200 flex items-center justify-center">
-        <LoaderIcon className="animate-spin size-10" />
+        <span className="loading loading-spinner loading-lg text-primary"></span>
       </div>
     );
   }
@@ -81,7 +84,7 @@ const NoteDetailPage = () => {
               Back to Notes
             </Link>
             <button
-              onClick={handleDelete}
+              onClick={() => setShowDeleteModal(true)}
               className="btn btn-error btn-outline"
             >
               <Trash2Icon className="h-5 w-5" />
@@ -91,44 +94,99 @@ const NoteDetailPage = () => {
 
           <div className="card bg-base-100">
             <div className="card-body">
-              <div className="form-control mb-4">
-                <label className="label">
-                  <span className="label-text">Title</span>
-                </label>
+              {/* Floating label input for Title */}
+              <div className="relative mb-8">
                 <input
+                  id="note-title-detail"
                   type="text"
-                  placeholder="Note title"
-                  className="input input-bordered"
+                  placeholder=" "
+                  className="block w-full px-4 pt-8 pb-2 text-lg bg-base-200 border-2 appearance-none rounded-xl focus:outline-none focus:border-primary/80 focus:bg-base-100 transition-all peer shadow-sm"
                   value={note.title}
                   onChange={(e) => setNote({ ...note, title: e.target.value })}
+                  autoComplete="off"
                 />
+                <label
+                  htmlFor="note-title-detail"
+                  className="absolute left-4 top-2 text-base-content/70 text-lg transition-all duration-200 pointer-events-none
+                  peer-placeholder-shown:top-6 peer-placeholder-shown:text-base-content/40
+                  peer-focus:top-2 peer-focus:text-primary/80
+                "
+                >
+                  Title
+                </label>
               </div>
 
-              <div className="form-control mb-4">
-                <label className="label">
-                  <span className="label-text">Content</span>
-                </label>
+              {/* Floating label textarea for Content */}
+              <div className="relative mb-8">
                 <textarea
-                  placeholder="Write your note here..."
-                  className="textarea textarea-bordered h-32"
+                  id="note-content-detail"
+                  placeholder=" "
+                  className="block w-full px-4 pt-8 pb-2 text-lg bg-base-200 border-2 appearance-none rounded-xl focus:outline-none focus:border-primary/80 focus:bg-base-100 transition-all peer shadow-sm h-40 resize-none"
                   value={note.content}
                   onChange={(e) =>
                     setNote({ ...note, content: e.target.value })
                   }
                 />
+                <label
+                  htmlFor="note-content-detail"
+                  className="absolute left-4 top-2 text-base-content/70 text-lg transition-all duration-200 pointer-events-none
+                  peer-placeholder-shown:top-6 peer-placeholder-shown:text-base-content/40
+                  peer-focus:top-2 peer-focus:text-primary/80
+                "
+                >
+                  Content
+                </label>
               </div>
 
               <div className="card-actions justify-end">
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary rounded-lg shadow-md px-6 py-2 text-base font-semibold tracking-wide transition-all hover:scale-[1.03] disabled:opacity-60"
                   disabled={saving}
                   onClick={handleSave}
                 >
-                  {saving ? "Saving..." : "Save Changes"}
+                  {saving ? (
+                    <span className="flex items-center gap-2">
+                      <span className="loading loading-spinner loading-xs"></span>
+                      Saving...
+                    </span>
+                  ) : (
+                    "Save Changes"
+                  )}
                 </button>
               </div>
             </div>
           </div>
+
+          {/* Delete Confirmation Modal */}
+          {showDeleteModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+              <div className="bg-base-100 rounded-lg shadow-lg p-6 w-full max-w-sm">
+                <h4 className="text-lg font-semibold mb-2 text-error">
+                  Delete Note?
+                </h4>
+                <p className="mb-4 text-base-content/80">
+                  Are you sure you want to delete this note? This action cannot
+                  be undone.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    onClick={() => setShowDeleteModal(false)}
+                    disabled={deleting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-sm btn-error"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    {deleting ? "Deleting..." : "Delete"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
