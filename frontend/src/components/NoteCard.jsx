@@ -4,6 +4,7 @@ import { formatDate } from "../lib/utils";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import DeleteModal from "./DeleteModal";
 
 const NoteCard = ({ note, setNotes }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -17,7 +18,6 @@ const NoteCard = ({ note, setNotes }) => {
       toast.success("Note deleted successfully");
       setShowDeleteModal(false);
     } catch (error) {
-      console.log("Error in handleDelete", error);
       toast.error("Failed to delete note");
     } finally {
       setLoading(false);
@@ -53,37 +53,30 @@ const NoteCard = ({ note, setNotes }) => {
         </div>
       </Link>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-base-100 rounded-lg shadow-lg p-6 w-full max-w-sm">
-            <h4 className="text-lg font-semibold mb-2 text-error">
-              Delete Note?
-            </h4>
-            <p className="mb-4 text-base-content/80">
-              Are you sure you want to delete this note? This action cannot be
-              undone.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                className="btn btn-sm btn-ghost"
-                onClick={() => setShowDeleteModal(false)}
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-sm btn-error"
-                onClick={() => handleDelete(note._id)}
-                disabled={loading}
-              >
-                {loading ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteModal
+        open={showDeleteModal}
+        onCancel={() => setShowDeleteModal(false)}
+        onConfirm={() => handleDelete(note._id)}
+        loading={loading}
+        title="Delete Note?"
+        description="Are you sure you want to delete this note? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmClass="btn-error"
+      />
     </>
   );
 };
+import PropTypes from "prop-types";
+
+NoteCard.propTypes = {
+  note: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    content: PropTypes.string.isRequired,
+    createdAt: PropTypes.string.isRequired,
+  }).isRequired,
+  setNotes: PropTypes.func.isRequired,
+};
+
 export default NoteCard;

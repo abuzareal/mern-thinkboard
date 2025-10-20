@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
 import { ArrowLeftIcon, LoaderIcon, Trash2Icon } from "lucide-react";
+import DeleteModal from "../components/DeleteModal";
 
 const NoteDetailPage = () => {
   const [note, setNote] = useState(null);
@@ -20,7 +21,6 @@ const NoteDetailPage = () => {
         const res = await api.get(`/notes/${id}`);
         setNote(res.data);
       } catch (error) {
-        console.log("Error in fetching note", error);
         toast.error("Failed to fetch the note");
       } finally {
         setLoading(false);
@@ -38,7 +38,6 @@ const NoteDetailPage = () => {
       toast.success("Note deleted");
       navigate("/");
     } catch (error) {
-      console.log("Error deleting the note:", error);
       toast.error("Failed to delete note");
     } finally {
       setDeleting(false);
@@ -59,7 +58,6 @@ const NoteDetailPage = () => {
       toast.success("Note updated successfully");
       navigate("/");
     } catch (error) {
-      console.log("Error saving the note:", error);
       toast.error("Failed to update note");
     } finally {
       setSaving(false);
@@ -157,36 +155,17 @@ const NoteDetailPage = () => {
             </div>
           </div>
 
-          {/* Delete Confirmation Modal */}
-          {showDeleteModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-              <div className="bg-base-100 rounded-lg shadow-lg p-6 w-full max-w-sm">
-                <h4 className="text-lg font-semibold mb-2 text-error">
-                  Delete Note?
-                </h4>
-                <p className="mb-4 text-base-content/80">
-                  Are you sure you want to delete this note? This action cannot
-                  be undone.
-                </p>
-                <div className="flex justify-end gap-2">
-                  <button
-                    className="btn btn-sm btn-ghost"
-                    onClick={() => setShowDeleteModal(false)}
-                    disabled={deleting}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="btn btn-sm btn-error"
-                    onClick={handleDelete}
-                    disabled={deleting}
-                  >
-                    {deleting ? "Deleting..." : "Delete"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+          <DeleteModal
+            open={showDeleteModal}
+            onCancel={() => setShowDeleteModal(false)}
+            onConfirm={handleDelete}
+            loading={deleting}
+            title="Delete Note?"
+            description="Are you sure you want to delete this note? This action cannot be undone."
+            confirmText="Delete"
+            cancelText="Cancel"
+            confirmClass="btn-error"
+          />
         </div>
       </div>
     </div>
